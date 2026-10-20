@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- TODO 1 : coordonnées GAV et packaging -->
+
+  <properties>
+    <!-- TODO 2 : version de Java (17) et encodage UTF-8 -->
+  </properties>
+
+  <dependencies>
+    <!-- TODO 3 : JUnit Jupiter 5.10.2, uniquement pour les tests -->
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- TODO 4 : figer les versions de compiler (3.13.0),
+                    surefire (3.2.5) et jar (3.4.1) -->
+    </plugins>
+  </build>
+</project>

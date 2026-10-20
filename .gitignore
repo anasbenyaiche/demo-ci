@@ -1,0 +1,10 @@
+# Sorties du build : régénérées à chaque exécution
+target/
+
+# Fichiers d'IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
