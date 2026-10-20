@@ -26,14 +26,7 @@ Suivez ensuite le **cahier des ateliers**, atelier 1.
 | `solution/atelier-3` | + pipeline Jenkins (`Jenkinsfile`, `ci-settings.xml`) |
 | `solution/atelier-4` | + analyse SonarQube et Quality Gate |
 
-## Rattraper un atelier
 
-Attention : cette commande remplace votre travail local par la solution.
-
-```bash
-git fetch formateur
-git reset --hard formateur/solution/atelier-2   # remplacer 2 par le numéro voulu
-```
 
 ## Prérequis
 
