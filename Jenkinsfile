@@ -38,8 +38,9 @@ pipeline {
         }
       }
         }
+
       stage('Reset Nexus Admin Password') {
-    steps {
+      steps {
         withCredentials([
             usernamePassword(
                 credentialsId: 'nexus-credentials',
@@ -55,7 +56,8 @@ pipeline {
                 set +x
 
                 HTTP_CODE=$(printf '%s' "$NEW_PASSWORD" | \
-                    curl -sS -o /dev/null \
+                    curl -sS \
+                    -o /tmp/nexus-reset-response.txt \
                     -w "%{http_code}" \
                     -u "$NEXUS_USER:$NEXUS_PASSWORD" \
                     -X PUT \
@@ -65,17 +67,23 @@ pipeline {
 
                 echo "Password reset HTTP: $HTTP_CODE"
 
-                test "$HTTP_CODE" = "204"
+                if [ "$HTTP_CODE" != "204" ]; then
+                    echo "Nexus rejected the password change."
+                    echo "Check the password policy and API request."
+                    exit 1
+                fi
+
+                echo "Nexus admin password changed successfully."
             '''
         }
-    }
       }
-        stage('Checkout GitHub') {
+      }
+      stage('Checkout GitHub') {
       steps {
         git branch: 'main',
                     url: 'https://github.com/anasbenyaiche/demo-ci.git'
       }
-        }
+      }
 
         stage('Build & Unit Tests') {
       steps {
