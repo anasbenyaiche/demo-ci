@@ -14,48 +14,7 @@ pipeline {
     }
 
     stages {
-
-        stage('Checkout GitHub') {
-            steps {
-                git branch: 'main',
-                    url: 'https://github.com/anasbenyaiche/demo-ci.git'
-            }
-        }
-
-        stage('Build & Unit Tests') {
-            steps {
-                sh 'mvn -B clean verify'
-            }
-            post {
-                always {
-                    junit allowEmptyResults: false,
-                          testResults: 'target/surefire-reports/*.xml'
-                }
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube-Local') {
-                    sh '''
-                        mvn -B \
-                          org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar \
-                          -Dsonar.projectKey=demo-ci \
-                          -Dsonar.projectName=demo-ci
-                    '''
-                }
-            }
-        }
-
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
-
-        stage('Publish to Nexus') {
+        stage('Verify Nexus Admin') {
             steps {
                 withCredentials([
                     usernamePassword(
@@ -65,6 +24,72 @@ pipeline {
                     )
                 ]) {
                     sh '''
+                        set +x
+
+                        HTTP_CODE=$(curl -s -o /dev/null \
+                            -w "%{http_code}" \
+                            -u "$NEXUS_USER:$NEXUS_PASSWORD" \
+                            http://nexus:8081/service/rest/v1/security/users)
+
+                        echo "Nexus authentication HTTP: $HTTP_CODE"
+
+                        test "$HTTP_CODE" = "200"
+                    '''
+                }
+            }
+
+      }
+
+        stage('Checkout GitHub') {
+      steps {
+        git branch: 'main',
+                    url: 'https://github.com/anasbenyaiche/demo-ci.git'
+      }
+        }
+
+        stage('Build & Unit Tests') {
+      steps {
+        sh 'mvn -B clean verify'
+      }
+      post {
+        always {
+          junit allowEmptyResults: false,
+                          testResults: 'target/surefire-reports/*.xml'
+        }
+      }
+        }
+
+        stage('SonarQube Analysis') {
+      steps {
+        withSonarQubeEnv('SonarQube-Local') {
+          sh '''
+                        mvn -B \
+                          org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar \
+                          -Dsonar.projectKey=demo-ci \
+                          -Dsonar.projectName=demo-ci
+                    '''
+        }
+      }
+        }
+
+        stage('Quality Gate') {
+      steps {
+        timeout(time: 5, unit: 'MINUTES') {
+          waitForQualityGate abortPipeline: true
+        }
+      }
+        }
+
+        stage('Publish to Nexus') {
+      steps {
+        withCredentials([
+                    usernamePassword(
+                        credentialsId: 'nexus-credentials',
+                        usernameVariable: 'NEXUS_USER',
+                        passwordVariable: 'NEXUS_PASSWORD'
+                    )
+                ]) {
+          sh '''
                         set +x
                         umask 077
 
@@ -92,20 +117,20 @@ EOF
                           -s "$SETTINGS_FILE" \
                           -DskipTests deploy
                     '''
-                }
-            }
+        }
+      }
         }
 
         stage('Docker Build & Test') {
-            agent {
-                label 'docker-agent'
-            }
+      agent {
+        label 'docker-agent'
+      }
 
-            steps {
-                git branch: 'main',
+      steps {
+        git branch: 'main',
                     url: 'https://github.com/anasbenyaiche/demo-ci.git'
 
-                sh '''
+        sh '''
                     docker version
 
                     docker build \
@@ -117,21 +142,21 @@ EOF
                     printf '%s\\n' "$OUTPUT" |
                       grep -F 'Application DEMO-CI démarrée !'
                 '''
-            }
+      }
         }
     }
 
     post {
         success {
-            echo 'CI/CD PIPELINE SUCCESS'
+      echo 'CI/CD PIPELINE SUCCESS'
         }
 
         failure {
-            echo 'CI/CD PIPELINE FAILED'
+      echo 'CI/CD PIPELINE FAILED'
         }
 
         always {
-            echo 'Pipeline terminé.'
+      echo 'Pipeline terminé.'
         }
     }
 }
