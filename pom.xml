@@ -26,6 +26,13 @@
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>0.8.14</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>com.formation.demo.Main</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -45,13 +52,13 @@
   </build>
   <distributionManagement>
     <snapshotRepository>
-        <id>nexus-snapshots</id>
-        <url>http://nexus:8081/repository/maven-snapshots/</url>
+      <id>nexus-snapshots</id>
+      <url>http://nexus:8081/repository/maven-snapshots/</url>
     </snapshotRepository>
 
     <repository>
-        <id>nexus-releases</id>
-        <url>http://nexus:8081/repository/maven-releases/</url>
+      <id>nexus-releases</id>
+      <url>http://nexus:8081/repository/maven-releases/</url>
     </repository>
-</distributionManagement>
+  </distributionManagement>
 </project>
