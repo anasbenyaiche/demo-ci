@@ -15,15 +15,15 @@ pipeline {
 
     stages {
         stage('Verify Nexus Admin') {
-            steps {
-                withCredentials([
+      steps {
+        withCredentials([
                     usernamePassword(
                         credentialsId: 'nexus-credentials',
                         usernameVariable: 'NEXUS_USER',
                         passwordVariable: 'NEXUS_PASSWORD'
                     )
                 ]) {
-                    sh '''
+          sh '''
                         set +x
 
                         HTTP_CODE=$(curl -s -o /dev/null \
@@ -35,11 +35,41 @@ pipeline {
 
                         test "$HTTP_CODE" = "200"
                     '''
-                }
-            }
-
+        }
       }
+        }
+      stage('Reset Nexus Admin Password') {
+    steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'nexus-credentials',
+                usernameVariable: 'NEXUS_USER',
+                passwordVariable: 'NEXUS_PASSWORD'
+            ),
+            string(
+                credentialsId: 'nexus-new-admin-password',
+                variable: 'NEW_PASSWORD'
+            )
+        ]) {
+            sh '''
+                set +x
 
+                HTTP_CODE=$(printf '%s' "$NEW_PASSWORD" | \
+                    curl -sS -o /dev/null \
+                    -w "%{http_code}" \
+                    -u "$NEXUS_USER:$NEXUS_PASSWORD" \
+                    -X PUT \
+                    -H "Content-Type: text/plain" \
+                    --data-binary @- \
+                    http://nexus:8081/service/rest/v1/security/users/admin/change-password)
+
+                echo "Password reset HTTP: $HTTP_CODE"
+
+                test "$HTTP_CODE" = "204"
+            '''
+        }
+    }
+      }
         stage('Checkout GitHub') {
       steps {
         git branch: 'main',
