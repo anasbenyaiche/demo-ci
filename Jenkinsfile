@@ -14,30 +14,6 @@ pipeline {
     }
 
     stages {
-        stage('Verify Nexus Admin') {
-      steps {
-        withCredentials([
-                    usernamePassword(
-                        credentialsId: 'nexus-credentials',
-                        usernameVariable: 'NEXUS_USER',
-                        passwordVariable: 'NEXUS_PASSWORD'
-                    )
-                ]) {
-          sh '''
-                        set +x
-
-                        HTTP_CODE=$(curl -s -o /dev/null \
-                            -w "%{http_code}" \
-                            -u "$NEXUS_USER:$NEXUS_PASSWORD" \
-                            http://nexus:8081/service/rest/v1/security/users)
-
-                        echo "Nexus authentication HTTP: $HTTP_CODE"
-
-                        test "$HTTP_CODE" = "200"
-                    '''
-        }
-      }
-        }
       stage('Checkout GitHub') {
       steps {
         git branch: 'main',
