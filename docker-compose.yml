@@ -6,7 +6,9 @@ services:
     volumes: ["jenkins_home:/var/jenkins_home"]
   nexus:
     image: sonatype/nexus3
-    ports: ["8081:8081"]
+    ports:
+    - "8081:8081"
+    - "8082:8082"
     volumes: ["nexus-data:/nexus-data"]
   sonarqube:
     image: sonarqube:community
