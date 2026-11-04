@@ -38,59 +38,6 @@ pipeline {
         }
       }
         }
-
- 
-stage('Reset Nexus Admin Password') {
-    steps {
-        withCredentials([
-            usernamePassword(
-                credentialsId: 'nexus-credentials',
-                usernameVariable: 'NEXUS_USER',
-                passwordVariable: 'NEXUS_PASSWORD'
-            ),
-            string(
-                credentialsId: 'nexus-new-admin-password',
-                variable: 'NEW_PASSWORD'
-            )
-        ]) {
-            sh '''
-                set +x
-                set -eu
-
-                RESPONSE_FILE=$(mktemp)
-                trap 'rm -f "$RESPONSE_FILE"' EXIT
-
-                HTTP_CODE=$(printf '%s' "$NEW_PASSWORD" | \
-                    curl -sS \
-                    -o "$RESPONSE_FILE" \
-                    -w "%{http_code}" \
-                    -u "$NEXUS_USER:$NEXUS_PASSWORD" \
-                    -X PUT \
-                    -H "Content-Type: text/plain" \
-                    --data-binary @- \
-                    http://nexus:8081/service/rest/v1/security/users/admin/change-password)
-
-                echo "Password reset HTTP: $HTTP_CODE"
-
-                if [ "$HTTP_CODE" != "204" ]; then
-                    echo "Response Content-Type:"
-                    file "$RESPONSE_FILE" 2>/dev/null || true
-
-                    echo "Response size:"
-                    wc -c < "$RESPONSE_FILE"
-
-                    echo "Password length:"
-                    printf '%s' "$NEW_PASSWORD" | wc -c
-
-                    exit 1
-                fi
-
-                echo "Password reset successful"
-            '''
-        }
-    }
-}
-
       stage('Checkout GitHub') {
       steps {
         git branch: 'main',
@@ -195,6 +142,43 @@ EOF
                 '''
       }
         }
+
+    stage('Docker Push to Nexus') {
+      agent {
+        label 'docker-agent'
+      }
+
+      steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'nexus-credentials',
+                usernameVariable: 'NEXUS_USER',
+                passwordVariable: 'NEXUS_PASSWORD'
+            )
+        ]) {
+            sh '''
+                set -eu
+                set +x
+
+                umask 077
+                export DOCKER_CONFIG="$(mktemp -d)"
+                trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+
+                printf '%s' "$NEXUS_PASSWORD" |
+                    docker login nexus:8082 \
+                        -u "$NEXUS_USER" \
+                        --password-stdin
+
+                docker tag \
+                    "demo-ci:${BUILD_NUMBER}" \
+                    "nexus:8082/demo-ci:${BUILD_NUMBER}"
+
+                docker push \
+                    "nexus:8082/demo-ci:${BUILD_NUMBER}"
+            '''
+        }
+      }
+    }
     }
 
     post {
