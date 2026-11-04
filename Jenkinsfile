@@ -39,8 +39,9 @@ pipeline {
       }
         }
 
-      stage('Reset Nexus Admin Password') {
-      steps {
+ 
+stage('Reset Nexus Admin Password') {
+    steps {
         withCredentials([
             usernamePassword(
                 credentialsId: 'nexus-credentials',
@@ -54,10 +55,14 @@ pipeline {
         ]) {
             sh '''
                 set +x
+                set -eu
+
+                RESPONSE_FILE=$(mktemp)
+                trap 'rm -f "$RESPONSE_FILE"' EXIT
 
                 HTTP_CODE=$(printf '%s' "$NEW_PASSWORD" | \
                     curl -sS \
-                    -o /tmp/nexus-reset-response.txt \
+                    -o "$RESPONSE_FILE" \
                     -w "%{http_code}" \
                     -u "$NEXUS_USER:$NEXUS_PASSWORD" \
                     -X PUT \
@@ -68,16 +73,24 @@ pipeline {
                 echo "Password reset HTTP: $HTTP_CODE"
 
                 if [ "$HTTP_CODE" != "204" ]; then
-                    echo "Nexus rejected the password change."
-                    echo "Check the password policy and API request."
+                    echo "Response Content-Type:"
+                    file "$RESPONSE_FILE" 2>/dev/null || true
+
+                    echo "Response size:"
+                    wc -c < "$RESPONSE_FILE"
+
+                    echo "Password length:"
+                    printf '%s' "$NEW_PASSWORD" | wc -c
+
                     exit 1
                 fi
 
-                echo "Nexus admin password changed successfully."
+                echo "Password reset successful"
             '''
         }
-      }
-      }
+    }
+}
+
       stage('Checkout GitHub') {
       steps {
         git branch: 'main',
