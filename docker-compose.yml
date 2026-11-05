@@ -1,0 +1,30 @@
+name: labo-ic
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-jdk21
+    ports: ["8080:8080", "50000:50000"]
+    volumes: ["jenkins_home:/var/jenkins_home"]
+  nexus:
+    image: sonatype/nexus3
+    ports:
+    - "8081:8081"
+    - "8082:8082"
+    volumes: ["nexus-data:/nexus-data"]
+  sonarqube:
+    image: sonarqube:community
+    environment:
+      SONAR_WEBHOOK_ALLOWLOCALURLS: "true"
+    ports: ["9000:9000"]
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+networks:
+  default:
+    name: ic
+volumes:
+  jenkins_home:
+  nexus-data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
