@@ -21,10 +21,6 @@ Suivez ensuite le **cahier des ateliers**, atelier 1.
 | Branche | Contenu |
 |---|---|
 | `main` | Point de départ de l'atelier 1 : code fourni, POM et Jenkinsfile à compléter |
-| `solution/atelier-1` | Build Maven complet : tests, JaCoCo, profils, Maven Wrapper |
-| `solution/atelier-2` | + publication Nexus (`distributionManagement`) |
-| `solution/atelier-3` | + pipeline Jenkins (`Jenkinsfile`, `ci-settings.xml`) |
-| `solution/atelier-4` | + analyse SonarQube et Quality Gate |
 
 
 
